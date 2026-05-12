@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Home Guardian</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card">
+        <h1>Smart Home Guardian</h1>
+        <p class="sub">Giam sat an ninh + an toan moi truong cho nha o</p>
+        <div class="camera-wrap">
+          <img class="camera" src="{{ camera_stream_url }}" alt="ESP32-CAM Stream" />
+        </div>
+      </section>
+
+      <section
+        id="status-box"
+        class="card"
+        hx-get="/partials/status"
+        hx-trigger="load, every 2s"
+        hx-swap="innerHTML"
+      >
+        {% include "partials_status.html" %}
+      </section>
+
+      <section class="card">
+        <h2>Dieu Khien</h2>
+        <div class="controls">
+          <button hx-post="/actions/door/open" hx-target="#status-box" hx-swap="innerHTML">Mo cua</button>
+          <button hx-post="/actions/door/close" hx-target="#status-box" hx-swap="innerHTML">Dong cua</button>
+          <button hx-post="/actions/light/on" hx-target="#status-box" hx-swap="innerHTML">Bat den</button>
+          <button hx-post="/actions/light/off" hx-target="#status-box" hx-swap="innerHTML">Tat den</button>
+        </div>
+      </section>
+
+      <section
+        id="events-box"
+        class="card"
+        hx-get="/partials/events"
+        hx-trigger="load, every 3s"
+        hx-swap="innerHTML"
+      >
+        {% include "partials_events.html" %}
+      </section>
+    </main>
+  </body>
+</html>
+

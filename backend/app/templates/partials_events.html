@@ -1,0 +1,17 @@
+<h2>Nhat Ky Su Kien</h2>
+<div class="events">
+  {% if events %}
+    {% for e in events %}
+      <article class="event {{ e.severity }}">
+        <header>
+          <strong>{{ e.event_type }}</strong>
+          <small>{{ e.created_at }}</small>
+        </header>
+        <p>{{ e.message }}</p>
+      </article>
+    {% endfor %}
+  {% else %}
+    <p>Chua co su kien.</p>
+  {% endif %}
+</div>
+

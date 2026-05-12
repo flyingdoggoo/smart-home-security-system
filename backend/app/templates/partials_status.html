@@ -1,0 +1,12 @@
+<h2>Trang Thai</h2>
+<div class="kv">
+  <div><span>Cua</span><strong>{{ status.door_state }}</strong></div>
+  <div><span>Den</span><strong>{{ status.light_state }}</strong></div>
+  <div><span>Nhan dien</span><strong>{{ status.face_label }}</strong></div>
+  <div><span>Do tin cay</span><strong>{{ '%.2f'|format(status.face_confidence or 0) }}</strong></div>
+  <div><span>Gas</span><strong>{{ '%.1f'|format(status.gas_value or 0) }}</strong></div>
+  <div><span>Bao dong gas</span><strong>{{ status.gas_alert }}</strong></div>
+  <div><span>So khuon mat</span><strong>{{ status.face_count }}</strong></div>
+  <div><span>Cap nhat</span><strong>{{ status.last_updated }}</strong></div>
+</div>
+

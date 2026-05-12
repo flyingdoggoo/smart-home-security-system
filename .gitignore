@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Runtime data
+backend/data/smart_home.db
+backend/data/**/*.jpg
+backend/data/**/*.jpeg
+backend/data/**/*.png
+backend/data/**/*.npz
+backend/data/**/*.npy
+
+# Logs / temp
+*.log
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+

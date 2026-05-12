@@ -1,0 +1,2 @@
+"""Smart Home backend package."""
+
