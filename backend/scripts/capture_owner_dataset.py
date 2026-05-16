@@ -21,8 +21,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--target-count", type=int, default=60, help="Number of accepted images to save.")
     parser.add_argument("--interval", type=float, default=1.2, help="Seconds between captures.")
-    parser.add_argument("--min-face-size", type=int, default=70, help="Minimum face width/height in pixels.")
-    parser.add_argument("--min-blur-score", type=float, default=80.0, help="Laplacian variance threshold.")
+    parser.add_argument("--min-face-size", type=int, default=50, help="Minimum face width/height in pixels.")
+    parser.add_argument("--min-blur-score", type=float, default=60.0, help="Laplacian variance threshold.")
     parser.add_argument("--min-brightness", type=float, default=40.0, help="Minimum average gray value.")
     parser.add_argument("--max-brightness", type=float, default=220.0, help="Maximum average gray value.")
     return parser.parse_args()
@@ -66,16 +66,22 @@ def main() -> None:
 
     accepted = 0
     sampled = 0
-    print("Start capture. Press Ctrl+C to stop.")
+    consecutive_fetch_failed = 0
+    print(f"Start capture. Press Ctrl+C to stop.")
+    print(f"Saving accepted images to: {output_dir.resolve()}")
 
     try:
         while accepted < args.target_count:
             frame = fetch_frame(args.capture_url)
             sampled += 1
             if frame is None:
+                consecutive_fetch_failed += 1
                 print(f"[{sampled}] frame fetch failed")
+                if consecutive_fetch_failed >= 3:
+                    print("Camera may be unstable/stuck. Check power/cable and avoid opening /stream in browser while capturing.")
                 time.sleep(args.interval)
                 continue
+            consecutive_fetch_failed = 0
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = detect_faces(gray)
@@ -93,6 +99,8 @@ def main() -> None:
         print("Capture interrupted by user.")
 
     print(f"Done. accepted={accepted}, sampled={sampled}")
+    if accepted == 0:
+        print("No accepted images were saved. Try lower thresholds or move face closer to camera.")
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ class BlynkService:
             return
         pin_key = pin.lower()
         url = f"https://{self.settings.blynk_server}/external/api/update"
-        params = {"token": self.settings.blynk_token, pin_key: value}
+        params = {"token": self.settings.blynk_token, **{pin_key: value}}
         try:
             requests.get(url, params=params, timeout=3)
         except requests.RequestException:
