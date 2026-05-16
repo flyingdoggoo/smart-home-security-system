@@ -68,7 +68,7 @@ File: `firmware/code_camera_esp32/code_camera_esp32.ino`
   - `Camera Ready! Use 'http://<ip>' to connect`
 
 Kiem tra:
-- `http://<ip-cam>/capture`
+- `http://10.104.86.173/capture`
 
 ## 3.2 ESP32-C3 (main controller)
 
@@ -77,7 +77,7 @@ File: `firmware/esp32_io_node/esp32_io_node.ino`
 - Sua:
   - `WIFI_SSID`
   - `WIFI_PASSWORD`
-  - `MQTT_HOST` = IP may chay backend/mosquitto (vd `172.20.10.3`)
+  - `MQTT_HOST` = IP may chay backend/mosquitto (vd `10.104.86.2`)
 - Upload
 - Mo Serial 115200, theo doi log:
   - sensor values
@@ -97,7 +97,7 @@ backend\.venv310\Scripts\python.exe -m pip install fastapi==0.115.0 uvicorn[stan
 ### 4.2 Thu anh owner
 
 ```powershell
-backend\.venv310\Scripts\python.exe backend\scripts\capture_owner_dataset.py --capture-url http://<ip-cam>/capture --target-count 60 --interval 2.0
+backend\.venv310\Scripts\python.exe backend\scripts\capture_owner_dataset.py --capture-url http://10.104.86.173/capture --target-count 60 --interval 2.0
 ```
 
 Anh luu tai:
@@ -116,11 +116,12 @@ backend\.venv310\Scripts\python.exe backend\scripts\enroll_owner.py --source-dir
 1. Tao/sua `backend/.env`:
 
 ```env
-ESP32_CAM_BASE_URL=http://<ip-cam>
+ESP32_CAM_BASE_URL=http://10.104.86.173
 CAMERA_CAPTURE_PATH=/capture
 VISION_INTERVAL_SEC=1.0
 FACE_DETECTOR_MODEL=hog
 FACE_MATCH_THRESHOLD=0.5
+FACE_OWNER_CONFIDENCE_THRESHOLD=0.6
 FACE_SMOOTHING_WINDOW=5
 OWNER_EMBEDDINGS_FILE=data/faces/owner_embeddings/owner_embeddings.npz
 ```
@@ -199,4 +200,3 @@ Luu y: chi chay 1 backend de tranh MQTT session collision.
   - `backend/scripts/capture_owner_dataset.py`
   - `backend/scripts/enroll_owner.py`
   - `backend/scripts/predict_once.py`
-

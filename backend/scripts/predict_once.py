@@ -17,7 +17,7 @@ from app.services.face_service import FaceService
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Predict face label from one ESP32-CAM capture.")
-    parser.add_argument("--capture-url", required=True, help="Example: http://172.20.10.2/capture")
+    parser.add_argument("--capture-url", required=True, help="Example: http://10.104.86.173/capture")
     parser.add_argument(
         "--embeddings",
         default=str(ROOT / "data/faces/owner_embeddings/owner_embeddings.npz"),

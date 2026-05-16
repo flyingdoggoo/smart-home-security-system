@@ -107,7 +107,11 @@ class FaceService:
         closest_distance = min(min_distances)
         confidence = max(0.0, min(1.0, 1.0 - closest_distance))
 
-        if owner_votes == len(encodings) and owner_votes > 0:
+        if (
+            owner_votes == len(encodings)
+            and owner_votes > 0
+            and confidence > self.settings.face_owner_confidence_threshold
+        ):
             return VisionResult(
                 label="owner",
                 confidence=confidence,
@@ -121,4 +125,3 @@ class FaceService:
             face_distance=closest_distance,
             face_count=face_count,
         )
-

@@ -20,11 +20,11 @@
 */
 
 // ---------- WiFi ----------
-const char *WIFI_SSID = "ITF";
-const char *WIFI_PASSWORD = "789789789";
+const char *WIFI_SSID = "Veitel";
+const char *WIFI_PASSWORD = "12345667";
 
 // ---------- MQTT ----------
-const char *MQTT_HOST = "172.20.10.3";
+const char *MQTT_HOST = "10.104.86.2";
 const int MQTT_PORT = 1883;
 const char *MQTT_CLIENT_ID = "esp32-c3-io-node";
 
@@ -60,7 +60,7 @@ const bool USE_MQ2_D0_FOR_ALERT = true;
 const bool USE_LIGHT_D0_FOR_DARK = false;
 const bool USE_BOTH_LIGHT_SOURCES_FOR_DARK = false;
 
-const char *FW_VERSION = "esp32-io-node-2026-05-16-01";
+const char *FW_VERSION = "esp32-io-node-2026-05-16-02";
 
 const int SERVO_LOCK_ANGLE = 10;
 const int SERVO_UNLOCK_ANGLE = 90;

@@ -49,7 +49,7 @@ Xay dung he thong nha thong minh gom:
 ## 3.2 Data strategy va AI
 
 - Da huong dan quy trinh:
-  1. Thu anh owner tu `http://<cam-ip>/capture`.
+  1. Thu anh owner tu `http://10.104.86.173/capture`.
   2. Loc anh co mat hop le.
   3. Tao file embedding owner (`.npz`).
   4. Chay predict real-time:
@@ -59,6 +59,7 @@ Xay dung he thong nha thong minh gom:
 - Da giai thich:
   - Khong can gan bounding box thu cong cho cach lam hien tai.
   - Bounding box tu detector runtime.
+  - URL camera hien tai: `http://10.104.86.173/capture`.
 
 ## 3.3 Firmware ESP32-C3
 

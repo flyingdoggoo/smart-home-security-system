@@ -45,7 +45,7 @@ Co the thu them 20-30 anh nguoi la de tune threshold va cooldown canh bao.
 
 - Face embedding: `face_recognition` (dlib, vector 128-D)
 - So khop: Euclidean distance + threshold (`FACE_MATCH_THRESHOLD`, mac dinh 0.5)
+- Gan nhan `owner` chi khi confidence > `FACE_OWNER_CONFIDENCE_THRESHOLD` (mac dinh 0.6)
 - Detector:
   - `hog` (nhe, hop laptop CPU)
   - `cnn` (chinh xac hon, nen co GPU)
-
