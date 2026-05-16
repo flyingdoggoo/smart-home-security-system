@@ -4,6 +4,8 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+backend/.venv310/
+backend/.env
 
 # Runtime data
 backend/data/smart_home.db
@@ -20,4 +22,3 @@ backend/data/**/*.npy
 # IDE
 .vscode/
 .idea/
-

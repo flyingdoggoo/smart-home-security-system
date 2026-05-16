@@ -42,19 +42,24 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
 
-  // Nhẹ hơn, ổn hơn cho OV3660 + ESP32 thường
+  // Stable streaming profile for AI Thinker:
+  // - JPEG avoids heavy RGB conversion load
+  // - QVGA keeps bandwidth/memory in safe zone
+  // - CAMERA_GRAB_LATEST helps drop stale frames instead of queue overflow
   config.xclk_freq_hz = 10000000;
-  config.frame_size = FRAMESIZE_240X240;
-  config.pixel_format = PIXFORMAT_RGB565;
-
-  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+  config.pixel_format = PIXFORMAT_JPEG;
+  config.frame_size = FRAMESIZE_QVGA;  // 320x240
+  config.grab_mode = CAMERA_GRAB_LATEST;
+  config.jpeg_quality = 20;  // lower quality -> smaller frame -> more stable
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 15;
-  config.fb_count = 1;
+  config.fb_count = 2;
 
   if (!psramFound()) {
-    Serial.println("WARNING: PSRAM not found. Face detect may not work well.");
+    Serial.println("WARNING: PSRAM not found. Switching to low-memory camera profile.");
     config.fb_location = CAMERA_FB_IN_DRAM;
+    config.frame_size = FRAMESIZE_QQVGA;  // 160x120
+    config.fb_count = 1;
+    config.jpeg_quality = 24;
   } else {
     Serial.println("PSRAM found.");
   }

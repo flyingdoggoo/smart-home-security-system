@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import socket
+import uuid
 from typing import Callable
 
 import paho.mqtt.client as mqtt
@@ -29,10 +32,17 @@ class MqttService:
         self.client.on_message = self._on_message
 
     def _build_client(self) -> mqtt.Client:
+        # Prevent client-id collision when multiple backend instances run
+        # (e.g., docker backend + local uvicorn backend at the same time).
+        base = (self.settings.mqtt_client_id or "smart-home-server").strip()
+        host_tag = socket.gethostname().split(".")[0]
+        pid_tag = str(os.getpid())
+        rand_tag = uuid.uuid4().hex[:4]
+        client_id = f"{base}-{host_tag}-{pid_tag}-{rand_tag}"[:64]
         try:
-            return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=self.settings.mqtt_client_id)
+            return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
         except TypeError:
-            return mqtt.Client(client_id=self.settings.mqtt_client_id)
+            return mqtt.Client(client_id=client_id)
 
     def start(self) -> None:
         try:
@@ -71,4 +81,3 @@ class MqttService:
             logger.warning("Invalid telemetry payload: %s", exc)
             return
         self.telemetry_handler(payload)
-
