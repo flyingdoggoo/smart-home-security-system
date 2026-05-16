@@ -1,0 +1,11 @@
+﻿flowchart TB
+    PWR[5V Nguồn chung] --> CAM[ESP32-CAM]
+    PWR --> C3[ESP32-C3]
+    PWR --> SERVO[Servo SG90]
+    PWR --> MQ2[MQ2 Module]
+    PWR --> LIGHT[Light Sensor]
+    C3 --- GND[GND chung]
+    CAM --- GND
+    SERVO --- GND
+    MQ2 --- GND
+    LIGHT --- GND

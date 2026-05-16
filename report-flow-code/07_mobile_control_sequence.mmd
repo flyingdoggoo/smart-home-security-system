@@ -1,0 +1,20 @@
+﻿sequenceDiagram
+    participant User
+    participant Mobile as Flutter App
+    participant API as FastAPI
+    participant MQ as MQTT
+    participant IO as ESP32-C3
+
+    User->>Mobile: Bấm "Turn on light"
+    Mobile->>API: POST /actions/light/on
+    API->>MQ: publish home/io/cmd/light ON
+    MQ->>IO: ON
+    IO->>MQ: telemetry(light_state=on)
+    API->>Mobile: Cập nhật trạng thái
+
+    User->>Mobile: Bấm "Open door"
+    Mobile->>API: POST /actions/door/open
+    API->>MQ: publish home/io/cmd/door OPEN
+    MQ->>IO: OPEN
+    IO->>MQ: telemetry(door_state=unlocked)
+    API->>Mobile: Cập nhật trạng thái

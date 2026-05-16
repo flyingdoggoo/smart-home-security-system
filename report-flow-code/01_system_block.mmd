@@ -1,0 +1,8 @@
+﻿flowchart LR
+    CAM[ESP32-CAM\n/capture] --> BACKEND[Backend FastAPI\nVision + Rule Engine]
+    BACKEND --> MQTT[(MQTT Broker)]
+    MQTT --> IO[ESP32-C3 I/O Node\nServo + MQ2 + Light + Buzzer + LED]
+    IO --> MQTT
+    MQTT --> BACKEND
+    BACKEND --> WEB[Web Dashboard]
+    BACKEND --> MOBILE[Mobile App Flutter]

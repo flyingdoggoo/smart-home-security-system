@@ -1,0 +1,18 @@
+﻿flowchart TD
+    A[Frame đầu vào] --> B[Phát hiện khuôn mặt]
+
+    B -->|Có mặt| C[Tạo embedding 128D]
+
+    C --> D[Tính d_i với từng embedding chủ nhà]
+
+    D --> E[Lấy d_min]
+
+    E --> F["Tính confidence<br/>= clip(1 - d_min, 0, 1)"]
+
+    F --> G{"d_min <= threshold<br/>AND<br/>confidence > threshold"}
+
+    G -- Có --> H[Nhãn owner]
+
+    G -- Không --> I[Nhãn stranger]
+
+    B -- Không có mặt --> J[Nhãn no_face]

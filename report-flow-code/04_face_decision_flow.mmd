@@ -1,0 +1,12 @@
+﻿flowchart TD
+    A[Frame mới] --> B{Có khuôn mặt?}
+    B -- Không --> N[Nhãn = no_face]
+    B -- Có --> C[Tính embedding]
+    C --> D[Tính min distance]
+    D --> E{distance <= FACE_MATCH_THRESHOLD?}
+    E -- Không --> S[Nhãn = stranger]
+    E -- Có --> F{confidence > FACE_OWNER_CONFIDENCE_THRESHOLD?}
+    F -- Có --> O[Nhãn = owner]
+    F -- Không --> S
+    O --> OPEN[Mở cửa + auto relock]
+    S --> CLOSE[Đóng cửa + cảnh báo]

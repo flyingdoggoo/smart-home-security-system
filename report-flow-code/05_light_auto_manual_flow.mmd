@@ -1,0 +1,8 @@
+﻿flowchart TD
+    A[Đọc light A0/D0] --> B[Tính darkDetected]
+    B --> C{darkDetected = true?}
+    C -- Có --> ON[BẬT đèn]
+    C -- Không --> D{manual override đang hiệu lực?}
+    D -- Có --> E[Giữ trạng thái theo lệnh ON/OFF]
+    D -- Không --> OFF[TẮT đèn]
+    USER[Lệnh web/mobile ON/OFF] --> D

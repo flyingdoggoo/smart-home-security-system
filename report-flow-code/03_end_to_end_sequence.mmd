@@ -1,0 +1,25 @@
+﻿sequenceDiagram
+    participant Cam as ESP32-CAM
+    participant Vision as VisionService
+    participant Face as FaceService
+    participant Ctrl as Controller
+    participant Mqtt as MQTT Broker
+    participant IO as ESP32-C3
+    participant UI as Web/Mobile
+
+    Vision->>Cam: GET /capture
+    Cam-->>Vision: JPEG frame
+    Vision->>Face: classify(frame)
+    Face-->>Vision: label, confidence, distance
+    Vision->>Ctrl: handle_vision_result(...)
+
+    alt owner
+        Ctrl->>Mqtt: publish home/io/cmd/door OPEN
+    else stranger
+        Ctrl->>Mqtt: publish home/io/cmd/door CLOSE
+    else no_face
+        Ctrl-->>Ctrl: keep safe state
+    end
+
+    IO->>Mqtt: publish home/io/telemetry
+    Ctrl->>UI: update status/events

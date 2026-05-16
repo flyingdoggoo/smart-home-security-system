@@ -1,0 +1,7 @@
+﻿flowchart LR
+    APP[Flutter App] --> PROV[Providers\nHomeStatus/EventLog]
+    PROV --> API[ApiService]
+    API --> BACKEND[FastAPI Backend]
+    BACKEND --> MQTT[(MQTT Broker)]
+    MQTT --> IO[ESP32-C3]
+    BACKEND --> APP
