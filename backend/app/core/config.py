@@ -19,11 +19,12 @@ class Settings(BaseSettings):
     app_port: int = 8000
     timezone: str = "Asia/Saigon"
 
-    esp32_cam_base_url: str = "http://192.168.1.50"
+    esp32_cam_base_url: str = "http://10.104.86.173"
     camera_capture_path: str = "/capture"
     vision_interval_sec: float = 1.0
     face_detector_model: str = "hog"
     face_match_threshold: float = 0.5
+    face_owner_confidence_threshold: float = 0.6
     face_smoothing_window: int = 5
     owner_embeddings_file: str = "data/faces/owner_embeddings/owner_embeddings.npz"
 

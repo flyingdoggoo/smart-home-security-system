@@ -52,7 +52,7 @@ docker compose up -d --build
 1. Thu thap anh tu ESP32-CAM:
 
 ```powershell
-python backend/scripts/capture_owner_dataset.py --capture-url http://172.20.10.2/capture --target-count 60 --interval 1.2
+python backend/scripts/capture_owner_dataset.py --capture-url http://10.104.86.173/capture --target-count 60 --interval 1.2
 ```
 
 2. Tao embeddings:

@@ -4,11 +4,100 @@
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
 
-const char *ssid = "ITF";
-const char *password = "789789789";
+const char *ssid = "Veitel";
+const char *password = "12345667";
 
 void startCameraServer();
 void setupLedFlash(int pin);
+void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info);
+const char *wifiStatusToText(wl_status_t status);
+bool connectWiFiRobust();
+
+const int WIFI_CONNECT_RETRIES = 3;
+const unsigned long WIFI_SINGLE_TRY_TIMEOUT_MS = 20000;
+
+const char *wifiStatusToText(wl_status_t status) {
+  switch (status) {
+    case WL_IDLE_STATUS:
+      return "WL_IDLE_STATUS";
+    case WL_NO_SSID_AVAIL:
+      return "WL_NO_SSID_AVAIL";
+    case WL_SCAN_COMPLETED:
+      return "WL_SCAN_COMPLETED";
+    case WL_CONNECTED:
+      return "WL_CONNECTED";
+    case WL_CONNECT_FAILED:
+      return "WL_CONNECT_FAILED";
+    case WL_CONNECTION_LOST:
+      return "WL_CONNECTION_LOST";
+    case WL_DISCONNECTED:
+      return "WL_DISCONNECTED";
+    default:
+      return "WL_UNKNOWN";
+  }
+}
+
+void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+    Serial.printf("[WiFi] DISCONNECTED, reason=%d\n", info.wifi_sta_disconnected.reason);
+  } else if (event == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
+    Serial.println("[WiFi] STA connected to AP");
+  } else if (event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
+    Serial.print("[WiFi] GOT_IP: ");
+    Serial.println(WiFi.localIP());
+  }
+}
+
+bool connectWiFiRobust() {
+  WiFi.onEvent(onWiFiEvent);
+  WiFi.persistent(false);
+  WiFi.setAutoReconnect(true);
+
+  int found = WiFi.scanNetworks(false, true);
+  Serial.printf("[WiFi] Scan found %d networks\n", found);
+  bool seenTarget = false;
+  for (int i = 0; i < found; i++) {
+    String current = WiFi.SSID(i);
+    if (current == String(ssid)) {
+      seenTarget = true;
+      Serial.printf("[WiFi] Target SSID found, RSSI=%d, CH=%d, auth=%d\n",
+                    WiFi.RSSI(i), WiFi.channel(i), (int)WiFi.encryptionType(i));
+    }
+  }
+  if (!seenTarget) {
+    Serial.printf("[WiFi] Target SSID '%s' not found in scan\n", ssid);
+  }
+
+  for (int attempt = 1; attempt <= WIFI_CONNECT_RETRIES; attempt++) {
+    Serial.printf("[WiFi] Connect attempt %d/%d\n", attempt, WIFI_CONNECT_RETRIES);
+
+    WiFi.disconnect(true, true);
+    delay(300);
+    WiFi.mode(WIFI_MODE_NULL);
+    delay(150);
+    WiFi.mode(WIFI_STA);
+    WiFi.setSleep(false);
+    WiFi.begin(ssid, password);
+
+    unsigned long started = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - started < WIFI_SINGLE_TRY_TIMEOUT_MS) {
+      wl_status_t st = WiFi.status();
+      Serial.printf("[WiFi] waiting... status=%s (%d)\n", wifiStatusToText(st), (int)st);
+      delay(800);
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("[WiFi] Connected");
+      return true;
+    }
+
+    Serial.printf("[WiFi] Attempt %d failed. Final status=%s (%d)\n",
+                  attempt, wifiStatusToText(WiFi.status()), (int)WiFi.status());
+    delay(1200);
+  }
+
+  return false;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -93,21 +182,9 @@ void setup() {
 #endif
 
   Serial.println("Starting WiFi...");
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  WiFi.setSleep(false);
-
-  int retry = 0;
-  while (WiFi.status() != WL_CONNECTED && retry < 40) {
-    delay(500);
-    Serial.print(".");
-    retry++;
-  }
-
-  Serial.println();
-
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!connectWiFiRobust()) {
     Serial.println("WiFi connect failed!");
+    Serial.println("Check hotspot/router: 2.4GHz, WPA2 (not WPA3-only), SSID/password.");
     return;
   }
 

@@ -39,6 +39,7 @@ He thong duoc tach thanh 2 node phan cung + 1 backend:
   - Detect face (HOG/CNN)
   - Encode 128-D vector
   - So sanh Euclidean distance voi embedding chu nha
-- Nhan `owner` neu distance <= `FACE_MATCH_THRESHOLD` (mac dinh 0.5).
+- Nhan `owner` neu:
+  - distance <= `FACE_MATCH_THRESHOLD` (mac dinh 0.5), va
+  - confidence > `FACE_OWNER_CONFIDENCE_THRESHOLD` (mac dinh 0.6).
 - Co smoothing window de giam false alert.
-
