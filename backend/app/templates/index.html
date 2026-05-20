@@ -1,52 +1,140 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Smart Home Guardian</title>
+    <title>Smart Home Guardian Web Monitor</title>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <main class="layout">
-      <section class="card">
+    <div id="sync-indicator" class="global-indicator htmx-indicator">Syncing data...</div>
+
+    <header class="site-hero">
+      <div class="hero-inner">
+        <p class="hero-kicker">SMART HOME SECURITY PLATFORM</p>
         <h1>Smart Home Guardian</h1>
-        <p class="sub">Giam sat an ninh + an toan moi truong cho nha o</p>
-        <div class="camera-wrap">
-          <img class="camera" src="{{ camera_stream_url }}" alt="ESP32-CAM Stream" />
+        <p class="hero-sub">
+          Web monitoring portal for camera feed, safety sensors, and remote control in one modern interface.
+        </p>
+        <div class="hero-badges">
+          <span class="badge badge-live">Live Monitoring</span>
+          <span class="badge">ESP32-CAM</span>
+          <span class="badge">FastAPI + MQTT</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <section class="section section-monitor">
+        <div class="section-heading">
+          <h2>Monitoring Center</h2>
+          <p>Live stream and device status are continuously synchronized from your smart home controller.</p>
+        </div>
+        <div class="monitor-layout">
+          <section class="surface camera-surface">
+            <div class="surface-head">
+              <h3>Live Camera Feed</h3>
+              <span class="pill-live">ONLINE</span>
+            </div>
+            <div class="camera-frame">
+              <img class="camera-feed" src="{{ camera_stream_url }}" alt="ESP32-CAM stream" loading="lazy" />
+            </div>
+            <p class="surface-note">
+              Stream endpoint: <code>{{ camera_stream_url }}</code>
+            </p>
+          </section>
+
+          <section
+            id="status-box"
+            class="surface status-surface"
+            hx-get="/partials/status"
+            hx-trigger="load, every 2s"
+            hx-swap="innerHTML"
+            hx-indicator="#sync-indicator"
+          >
+            {% include "partials_status.html" %}
+          </section>
         </div>
       </section>
 
-      <section
-        id="status-box"
-        class="card"
-        hx-get="/partials/status"
-        hx-trigger="load, every 2s"
-        hx-swap="innerHTML"
-      >
-        {% include "partials_status.html" %}
-      </section>
+      <section class="section section-control">
+        <div class="section-heading">
+          <h2>Remote Operations</h2>
+          <p>Manual commands are sent directly from this web page to lock control and room lighting.</p>
+        </div>
+        <div class="control-layout">
+          <section class="surface control-surface">
+            <div class="surface-head">
+              <h3>Quick Actions</h3>
+              <span class="pill-soft">Web commands</span>
+            </div>
+            <div class="control-grid">
+              <button
+                class="action-btn btn-door-open"
+                hx-post="/actions/door/open"
+                hx-target="#status-box"
+                hx-swap="innerHTML"
+                hx-indicator="#sync-indicator"
+              >
+                Open Door
+              </button>
+              <button
+                class="action-btn btn-door-close"
+                hx-post="/actions/door/close"
+                hx-target="#status-box"
+                hx-swap="innerHTML"
+                hx-indicator="#sync-indicator"
+              >
+                Lock Door
+              </button>
+              <button
+                class="action-btn btn-light-on"
+                hx-post="/actions/light/on"
+                hx-target="#status-box"
+                hx-swap="innerHTML"
+                hx-indicator="#sync-indicator"
+              >
+                Turn Light On
+              </button>
+              <button
+                class="action-btn btn-light-off"
+                hx-post="/actions/light/off"
+                hx-target="#status-box"
+                hx-swap="innerHTML"
+                hx-indicator="#sync-indicator"
+              >
+                Turn Light Off
+              </button>
+            </div>
+          </section>
 
-      <section class="card">
-        <h2>Dieu Khien</h2>
-        <div class="controls">
-          <button hx-post="/actions/door/open" hx-target="#status-box" hx-swap="innerHTML">Mo cua</button>
-          <button hx-post="/actions/door/close" hx-target="#status-box" hx-swap="innerHTML">Dong cua</button>
-          <button hx-post="/actions/light/on" hx-target="#status-box" hx-swap="innerHTML">Bat den</button>
-          <button hx-post="/actions/light/off" hx-target="#status-box" hx-swap="innerHTML">Tat den</button>
+          <aside class="surface control-note">
+            <h3>Sync Policy</h3>
+            <ul>
+              <li>Status panel refreshes every 2 seconds.</li>
+              <li>Recent events refresh every 3 seconds.</li>
+              <li>Manual actions update status immediately.</li>
+            </ul>
+          </aside>
         </div>
       </section>
 
       <section
         id="events-box"
-        class="card"
+        class="section section-events surface"
         hx-get="/partials/events"
         hx-trigger="load, every 3s"
         hx-swap="innerHTML"
+        hx-indicator="#sync-indicator"
       >
         {% include "partials_events.html" %}
       </section>
     </main>
+
+    <footer class="site-footer">
+      <p>Smart Home Guardian Web Interface</p>
+      <p class="footer-note">Secure monitoring and remote control in blue-white layout.</p>
+    </footer>
   </body>
 </html>
-

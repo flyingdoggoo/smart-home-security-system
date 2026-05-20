@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Capture owner dataset from ESP32-CAM /capture endpoint.")
-    parser.add_argument("--capture-url", required=True, help="Example: http://10.104.86.173/capture")
+    parser.add_argument("--capture-url", required=True, help="Example: http://esp32cam.local/capture")
     parser.add_argument(
         "--output-dir",
         default=str(BASE_DIR / "data/faces/owner_raw"),

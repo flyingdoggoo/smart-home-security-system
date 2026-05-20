@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ESP32Servo.h>
+#include <Preferences.h>
 
 /*
   ESP32-C3 main controller
@@ -24,9 +25,17 @@ const char *WIFI_SSID = "Veitel";
 const char *WIFI_PASSWORD = "12345667";
 
 // ---------- MQTT ----------
-const char *MQTT_HOST = "10.104.86.2";
+// MQTT_HOST:
+// - Co the de rong de bat auto-discovery.
+// - Neu dien hostname/IP, firmware se uu tien thu truoc.
+const char *MQTT_HOST = "";
 const int MQTT_PORT = 1883;
 const char *MQTT_CLIENT_ID = "esp32-c3-io-node";
+const bool MQTT_AUTO_DISCOVERY_ENABLED = true;
+const uint16_t MQTT_DISCOVERY_CONNECT_TIMEOUT_MS = 180;
+const unsigned long MQTT_DISCOVERY_RETRY_COOLDOWN_MS = 15000;
+const char *PREF_NAMESPACE = "netcfg";
+const char *PREF_KEY_MQTT_IP = "mqtt_ip";
 
 const char *TOPIC_DOOR_CMD = "home/io/cmd/door";
 const char *TOPIC_LIGHT_CMD = "home/io/cmd/light";
@@ -73,6 +82,9 @@ const unsigned long LIGHT_OVERRIDE_TIMEOUT_MS = 5UL * 60UL * 1000UL;
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 Servo doorServo;
+Preferences preferences;
+IPAddress mqttServerIp;
+bool mqttServerIpReady = false;
 
 String doorState = "locked";
 String lightState = "off";
@@ -93,6 +105,133 @@ unsigned long lastSensorReadMs = 0;
 unsigned long lastTelemetryMs = 0;
 unsigned long lastDebugMs = 0;
 unsigned long manualLightUntilMs = 0;
+unsigned long lastMqttDiscoveryAttemptMs = 0;
+
+bool parseIpAddress(const String &text, IPAddress &outIp) {
+  return outIp.fromString(text);
+}
+
+bool canConnectTcp(const IPAddress &ip, uint16_t port, uint16_t timeoutMs) {
+  (void)timeoutMs; // giu tham so de de tuning neu can
+  WiFiClient probe;
+  bool ok = probe.connect(ip, port);
+  probe.stop();
+  return ok;
+}
+
+bool loadSavedMqttIp(IPAddress &outIp) {
+  if (!preferences.begin(PREF_NAMESPACE, true)) {
+    return false;
+  }
+  String saved = preferences.getString(PREF_KEY_MQTT_IP, "");
+  preferences.end();
+  if (saved.length() == 0) {
+    return false;
+  }
+  if (!parseIpAddress(saved, outIp)) {
+    return false;
+  }
+  return true;
+}
+
+void saveMqttIp(const IPAddress &ip) {
+  if (!preferences.begin(PREF_NAMESPACE, false)) {
+    return;
+  }
+  preferences.putString(PREF_KEY_MQTT_IP, ip.toString());
+  preferences.end();
+}
+
+bool tryResolveMqttHost(IPAddress &resolvedIp) {
+  String configured = String(MQTT_HOST);
+  configured.trim();
+  if (configured.length() == 0) {
+    return false;
+  }
+
+  if (parseIpAddress(configured, resolvedIp)) {
+    return true;
+  }
+
+  if (WiFi.hostByName(configured.c_str(), resolvedIp)) {
+    return true;
+  }
+  return false;
+}
+
+bool scanSubnetForMqtt(IPAddress &foundIp) {
+  IPAddress local = WiFi.localIP();
+  if (local[0] == 0 && local[1] == 0 && local[2] == 0 && local[3] == 0) {
+    return false;
+  }
+
+  IPAddress gateway = WiFi.gatewayIP();
+  if (gateway[0] != 0 || gateway[1] != 0 || gateway[2] != 0 || gateway[3] != 0) {
+    if (canConnectTcp(gateway, MQTT_PORT, MQTT_DISCOVERY_CONNECT_TIMEOUT_MS)) {
+      foundIp = gateway;
+      return true;
+    }
+  }
+
+  uint8_t a = local[0];
+  uint8_t b = local[1];
+  uint8_t c = local[2];
+  uint8_t selfHost = local[3];
+
+  for (int host = 1; host <= 254; host++) {
+    if (host == selfHost) {
+      continue;
+    }
+
+    IPAddress candidate(a, b, c, host);
+    if (candidate == gateway) {
+      continue;
+    }
+
+    if (canConnectTcp(candidate, MQTT_PORT, MQTT_DISCOVERY_CONNECT_TIMEOUT_MS)) {
+      foundIp = candidate;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool resolveMqttServerIp(bool forceRediscover) {
+  if (!forceRediscover && mqttServerIpReady) {
+    return true;
+  }
+
+  IPAddress candidate;
+
+  if (tryResolveMqttHost(candidate) && canConnectTcp(candidate, MQTT_PORT, MQTT_DISCOVERY_CONNECT_TIMEOUT_MS)) {
+    mqttServerIp = candidate;
+    mqttServerIpReady = true;
+    saveMqttIp(candidate);
+    Serial.printf("[MQTT] Using configured host -> %s\n", mqttServerIp.toString().c_str());
+    return true;
+  }
+
+  if (!forceRediscover && loadSavedMqttIp(candidate) && canConnectTcp(candidate, MQTT_PORT, MQTT_DISCOVERY_CONNECT_TIMEOUT_MS)) {
+    mqttServerIp = candidate;
+    mqttServerIpReady = true;
+    Serial.printf("[MQTT] Using saved broker IP -> %s\n", mqttServerIp.toString().c_str());
+    return true;
+  }
+
+  if (MQTT_AUTO_DISCOVERY_ENABLED) {
+    Serial.println("[MQTT] Discovery scanning subnet...");
+    if (scanSubnetForMqtt(candidate)) {
+      mqttServerIp = candidate;
+      mqttServerIpReady = true;
+      saveMqttIp(candidate);
+      Serial.printf("[MQTT] Discovery found broker -> %s\n", mqttServerIp.toString().c_str());
+      return true;
+    }
+  }
+
+  mqttServerIpReady = false;
+  return false;
+}
 
 void setPinActiveLevel(int pin, bool active, bool activeHigh) {
   if (pin < 0) {
@@ -261,20 +400,45 @@ void ensureWiFi() {
     return;
   }
   WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
+  mqttServerIpReady = false;
+  Serial.printf("[WiFi] Connected. IP=%s GW=%s MASK=%s\n",
+                WiFi.localIP().toString().c_str(),
+                WiFi.gatewayIP().toString().c_str(),
+                WiFi.subnetMask().toString().c_str());
 }
 
 void ensureMqtt() {
+  if (!mqttServerIpReady) {
+    unsigned long now = millis();
+    if ((long)(now - lastMqttDiscoveryAttemptMs) >= 0) {
+      lastMqttDiscoveryAttemptMs = now + MQTT_DISCOVERY_RETRY_COOLDOWN_MS;
+      resolveMqttServerIp(true);
+      if (mqttServerIpReady) {
+        mqttClient.setServer(mqttServerIp, MQTT_PORT);
+      }
+    }
+  }
+
+  if (!mqttServerIpReady) {
+    return;
+  }
+
   while (!mqttClient.connected()) {
     String clientId = String(MQTT_CLIENT_ID) + "-" + String(random(0xFFFF), HEX);
     if (mqttClient.connect(clientId.c_str())) {
       mqttClient.subscribe(TOPIC_DOOR_CMD, 1);
       mqttClient.subscribe(TOPIC_LIGHT_CMD, 1);
+      Serial.printf("[MQTT] Connected broker=%s\n", mqttServerIp.toString().c_str());
     } else {
+      Serial.printf("[MQTT] Connect failed state=%d\n", mqttClient.state());
+      mqttServerIpReady = false;
       delay(1000);
+      return;
     }
   }
 }
@@ -306,7 +470,10 @@ void setup() {
   setDoorLocked(true);
 
   ensureWiFi();
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  resolveMqttServerIp(false);
+  if (mqttServerIpReady) {
+    mqttClient.setServer(mqttServerIp, MQTT_PORT);
+  }
   mqttClient.setCallback(mqttCallback);
 }
 

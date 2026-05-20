@@ -1,12 +1,57 @@
-<h2>Trang Thai</h2>
-<div class="kv">
-  <div><span>Cua</span><strong>{{ status.door_state }}</strong></div>
-  <div><span>Den</span><strong>{{ status.light_state }}</strong></div>
-  <div><span>Nhan dien</span><strong>{{ status.face_label }}</strong></div>
-  <div><span>Do tin cay</span><strong>{{ '%.2f'|format(status.face_confidence or 0) }}</strong></div>
-  <div><span>Gas</span><strong>{{ '%.1f'|format(status.gas_value or 0) }}</strong></div>
-  <div><span>Bao dong gas</span><strong>{{ status.gas_alert }}</strong></div>
-  <div><span>So khuon mat</span><strong>{{ status.face_count }}</strong></div>
-  <div><span>Cap nhat</span><strong>{{ status.last_updated }}</strong></div>
+{% set door_open = status.door_state == "unlocked" %}
+{% set light_on = status.light_state == "on" %}
+{% set gas_alert = status.gas_alert %}
+{% set face_label = status.face_label|default("no_face") %}
+{% set face_owner = face_label == "owner" %}
+{% set face_stranger = face_label == "stranger" %}
+
+<div class="surface-head">
+  <h3>System Status</h3>
+  <span class="pill-soft">Auto refresh 2s</span>
 </div>
 
+<div class="state-grid">
+  <article class="state-card {{ 'ok' if door_open else 'neutral' }}">
+    <span>Door</span>
+    <strong>{{ "Unlocked" if door_open else "Locked" }}</strong>
+  </article>
+  <article class="state-card {{ 'ok' if light_on else 'neutral' }}">
+    <span>Room Light</span>
+    <strong>{{ "On" if light_on else "Off" }}</strong>
+  </article>
+  <article class="state-card {{ 'danger' if gas_alert else 'ok' }}">
+    <span>Gas Alarm</span>
+    <strong>{{ "Active" if gas_alert else "Normal" }}</strong>
+  </article>
+  <article class="state-card {{ 'warning' if face_stranger else ('ok' if face_owner else 'neutral') }}">
+    <span>Face Result</span>
+    <strong>{{ face_label|replace("_", " ")|title }}</strong>
+  </article>
+</div>
+
+<div class="metrics-grid">
+  <article class="metric-card">
+    <span class="metric-label">Face Confidence</span>
+    <strong class="metric-value">{{ "%.2f"|format(status.face_confidence or 0) }}</strong>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Face Distance</span>
+    <strong class="metric-value">{{ "%.3f"|format(status.face_distance or 0) }}</strong>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Gas Value</span>
+    <strong class="metric-value">{{ "%.1f"|format(status.gas_value or 0) }}</strong>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Face Count</span>
+    <strong class="metric-value">{{ status.face_count }}</strong>
+  </article>
+  <article class="metric-card metric-wide">
+    <span class="metric-label">Last Source</span>
+    <strong class="metric-value">{{ status.source }}</strong>
+  </article>
+  <article class="metric-card metric-wide">
+    <span class="metric-label">Last Updated</span>
+    <strong class="metric-value">{{ status.last_updated }}</strong>
+  </article>
+</div>

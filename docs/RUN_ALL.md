@@ -68,7 +68,8 @@ File: `firmware/code_camera_esp32/code_camera_esp32.ino`
   - `Camera Ready! Use 'http://<ip>' to connect`
 
 Kiem tra:
-- `http://10.104.86.173/capture`
+- `http://esp32cam.local/capture`
+- Neu may khong resolve `.local`, mo Serial ESP32-CAM de lay IP hien tai.
 
 ## 3.2 ESP32-C3 (main controller)
 
@@ -77,7 +78,9 @@ File: `firmware/esp32_io_node/esp32_io_node.ino`
 - Sua:
   - `WIFI_SSID`
   - `WIFI_PASSWORD`
-  - `MQTT_HOST` = IP may chay backend/mosquitto (vd `10.104.86.2`)
+  - `MQTT_HOST`:
+    - de rong `""` de firmware tu dong quet broker MQTT trong cung subnet
+    - hoac dien hostname/IP neu ban muon khoa cung
 - Upload
 - Mo Serial 115200, theo doi log:
   - sensor values
@@ -97,7 +100,7 @@ backend\.venv310\Scripts\python.exe -m pip install fastapi==0.115.0 uvicorn[stan
 ### 4.2 Thu anh owner
 
 ```powershell
-backend\.venv310\Scripts\python.exe backend\scripts\capture_owner_dataset.py --capture-url http://10.104.86.173/capture --target-count 60 --interval 2.0
+backend\.venv310\Scripts\python.exe backend\scripts\capture_owner_dataset.py --capture-url http://esp32cam.local/capture --target-count 60 --interval 2.0
 ```
 
 Anh luu tai:
@@ -116,8 +119,15 @@ backend\.venv310\Scripts\python.exe backend\scripts\enroll_owner.py --source-dir
 1. Tao/sua `backend/.env`:
 
 ```env
-ESP32_CAM_BASE_URL=http://10.104.86.173
+ESP32_CAM_BASE_URL=http://esp32cam.local
 CAMERA_CAPTURE_PATH=/capture
+CAMERA_DISCOVERY_ENABLED=true
+CAMERA_DISCOVERY_COOLDOWN_SEC=15
+CAMERA_DISCOVERY_CONNECT_TIMEOUT_SEC=1.2
+CAMERA_DISCOVERY_READ_TIMEOUT_SEC=2.5
+CAMERA_DISCOVERY_MAX_WORKERS=48
+CAMERA_HOST_HINTS=esp32cam.local,esp32-cam.local
+CAMERA_SUBNET_HINTS=10.246.248.0/24,172.20.10.0/24
 VISION_INTERVAL_SEC=1.0
 FACE_DETECTOR_MODEL=hog
 FACE_MATCH_THRESHOLD=0.5
@@ -173,7 +183,8 @@ Luu y: chi chay 1 backend de tranh MQTT session collision.
   - Dao cuc LED
   - Doi `LIGHT_LED_ACTIVE_HIGH` trong firmware (`true/false`)
 3. Neu khong co log:
-  - Kiem tra `MQTT_HOST` dung IP may backend
+  - Neu `MQTT_HOST=""`: cho firmware auto-discovery tim broker
+  - Neu khoa cung host/IP: kiem tra host/IP do dang dung
   - ESP32-C3 va backend cung mang WiFi
 
 ### 7.3 Gas khong bao tren web
@@ -183,6 +194,16 @@ Luu y: chi chay 1 backend de tranh MQTT session collision.
   - `MQ2_D0_ACTIVE_LOW` (`true/false`)
   - `GAS_THRESHOLD`
 3. Dam bao A0/D0 khong qua 3.3V vao ESP32-C3 (neu module cap 5V -> phai chia ap)
+
+### 7.5 Camera `.local` resolve sai IP
+
+- Trieu chung:
+  - Log backend thay `404/500` tu host khong phai ESP32-CAM.
+  - Hoac timeout ngau nhien du camera van in `Camera Ready`.
+- Cach xu ly:
+  - Dat `CAMERA_SUBNET_HINTS` dung subnet hotspot hien tai.
+  - Vi du hotspot hien tai: `10.246.248.0/24`.
+  - Backend se tu quet subnet hint va pin sang IP private cua camera.
 
 ### 7.4 ESP32-CAM dung/treo
 

@@ -1,17 +1,20 @@
-<h2>Nhat Ky Su Kien</h2>
-<div class="events">
+<div class="surface-head">
+  <h2>Recent Events</h2>
+  <span class="pill-soft">Latest 15 records</span>
+</div>
+
+<div class="events-list">
   {% if events %}
     {% for e in events %}
-      <article class="event {{ e.severity }}">
-        <header>
-          <strong>{{ e.event_type }}</strong>
+      <article class="event-row {{ e.severity }}">
+        <header class="event-top">
+          <strong>{{ e.event_type|replace("_", " ")|title }}</strong>
           <small>{{ e.created_at }}</small>
         </header>
         <p>{{ e.message }}</p>
       </article>
     {% endfor %}
   {% else %}
-    <p>Chua co su kien.</p>
+    <p class="empty-row">No events available yet.</p>
   {% endif %}
 </div>
-

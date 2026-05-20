@@ -19,8 +19,15 @@ class Settings(BaseSettings):
     app_port: int = 8000
     timezone: str = "Asia/Saigon"
 
-    esp32_cam_base_url: str = "http://10.104.86.173"
+    esp32_cam_base_url: str = "http://esp32cam.local"
     camera_capture_path: str = "/capture"
+    camera_discovery_enabled: bool = True
+    camera_discovery_cooldown_sec: float = 15.0
+    camera_discovery_connect_timeout_sec: float = 1.2
+    camera_discovery_read_timeout_sec: float = 2.5
+    camera_discovery_max_workers: int = 48
+    camera_host_hints: str = "esp32cam.local,esp32-cam.local"
+    camera_subnet_hints: str = ""
     vision_interval_sec: float = 1.0
     face_detector_model: str = "hog"
     face_match_threshold: float = 0.5

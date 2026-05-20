@@ -1,11 +1,13 @@
 #include "esp_camera.h"
 #include <WiFi.h>
+#include <ESPmDNS.h>
 
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
 
 const char *ssid = "Veitel";
 const char *password = "12345667";
+const char *cameraHostname = "esp32cam";
 
 void startCameraServer();
 void setupLedFlash(int pin);
@@ -76,6 +78,7 @@ bool connectWiFiRobust() {
     WiFi.mode(WIFI_MODE_NULL);
     delay(150);
     WiFi.mode(WIFI_STA);
+    WiFi.setHostname(cameraHostname);
     WiFi.setSleep(false);
     WiFi.begin(ssid, password);
 
@@ -192,9 +195,17 @@ void setup() {
 
   startCameraServer();
 
+  if (MDNS.begin(cameraHostname)) {
+    MDNS.addService("http", "tcp", 80);
+    Serial.printf("mDNS ready: http://%s.local\n", cameraHostname);
+  } else {
+    Serial.println("mDNS start failed");
+  }
+
   Serial.print("Camera Ready! Use 'http://");
   Serial.print(WiFi.localIP());
   Serial.println("' to connect");
+  Serial.printf("Camera hostname: http://%s.local\n", cameraHostname);
 }
 
 void loop() {
